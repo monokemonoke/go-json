@@ -9,4 +9,8 @@ import (
 func main() {
 	fmt.Println("Hello go")
 	fmt.Println(myjson.Hoge())
+
+	testInput := `{ "key" : "value" }`
+	lexer := myjson.NewLexer(testInput)
+	lexer.Lex()
 }
