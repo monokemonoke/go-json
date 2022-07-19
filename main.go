@@ -13,7 +13,7 @@ func main() {
 	for k, v := range json {
 		fmt.Printf("%s : %s \n", k, v)
 	}
-	
+
 	testInput2 := `{ "price" : "100", "apple" :"banana", "hello world": "hogehoge"}`
 	lexer2 := myjson.NewParser(testInput2)
 	json2 := lexer2.Parse()
