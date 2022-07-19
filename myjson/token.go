@@ -1,0 +1,10 @@
+package myjson
+
+type TOKEN_TYPE int
+
+const (
+	TOKEN_LEFT_BRACKET TOKEN_TYPE = iota
+	TOKEN_RIGHT_BRACKET
+	TOKEN_KEY
+	TOKEN_STRING
+)
