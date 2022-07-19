@@ -1,13 +1,15 @@
 package myjson
 
 import (
-	"fmt"
+	"log"
 )
 
 type Lexer struct {
 	source string
 	curpos int
 }
+
+type Json map[string]interface{}
 
 func NewLexer(source string) *Lexer {
 	var lexer Lexer
@@ -24,6 +26,7 @@ func (l *Lexer) getCurChar() (string, bool) {
 }
 
 func (l *Lexer) getCurCharAndSkip() (string, bool) {
+	l.skipSpaces()
 	if len(l.source) <= l.curpos {
 		return "", false
 	}
@@ -46,15 +49,12 @@ func (l *Lexer) getStringToken() (name string) {
 	l.skipSpaces()
 	char, ok := l.getCurChar()
 	if !ok || char != "\"" {
-		fmt.Println("early return")
-		fmt.Println(char, ok)
 		return
 	}
 	l.curpos++
 
 	for {
 		char, ok := l.getCurChar()
-		fmt.Println(char, ok)
 		if !ok || char == "\"" {
 			l.curpos++
 			return
@@ -64,14 +64,29 @@ func (l *Lexer) getStringToken() (name string) {
 	}
 }
 
-func (l *Lexer) Lex() {
-	l.skipSpaces()
-	l.getCurCharAndSkip() // -> {
-	key := l.getStringToken()
-	l.skipSpaces()
-	l.getCurCharAndSkip() // -> :
-	val := l.getStringToken()
-	l.skipSpaces()
-	l.getCurCharAndSkip() // -> }
-	fmt.Println(key, val)
+func (l *Lexer) expectChar(char string) {
+	c, ok := l.getCurCharAndSkip() // -> {
+	if !ok || c != char {
+		log.Printf("Expect %s got %s\n", char, c)
+		return
+	}
+}
+
+func (l *Lexer) Lex() Json {
+	json := Json{}
+	l.expectChar("{")
+
+	for {
+		key := l.getStringToken()
+		log.Println(key)
+		l.expectChar(":")
+		val := l.getStringToken()
+		log.Println(val)
+		json[key] = val
+
+		c, ok := l.getCurCharAndSkip()
+		if !ok || c != "," {
+			return json
+		}
+	}
 }
