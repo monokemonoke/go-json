@@ -12,7 +12,9 @@ func TestLexer(t *testing.T) {
 		TOKEN_STRING,
 		TOKEN_RIGHT_BRACKET,
 	}
-	actual := Lexer(testInput)
+	
+	lexer := NewLexer(testInput)
+	actual := lexer.Lex()
 
 	if len(actual) != len(expect) {
 		t.Fatalf("Expect %d tokens but got %d tokens", len(expect), len(actual))
