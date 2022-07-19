@@ -82,7 +82,7 @@ func (p *Parser) getNumber() int {
 		}
 		symbol += c
 	}
-
+	p.curpos--
 	if num, ok := strconv.Atoi(symbol); ok != nil {
 		log.Printf("In getNumber(): cannot convert %s to int\n", symbol)
 		return 0
@@ -95,12 +95,12 @@ func (p *Parser) getBool() bool {
 	symbol := ""
 	for {
 		c, ok := p.getCurCharAndSkip()
-		if !ok || c == " " {
+		if !ok || c == " " || c == "," || c == "}" {
 			break
 		}
 		symbol += c
 	}
-
+	p.curpos--
 	switch symbol {
 	case "true":
 		return true
@@ -113,6 +113,7 @@ func (p *Parser) getBool() bool {
 }
 
 func (p *Parser) getValue() interface{} {
+	p.skipSpaces()
 	c, ok := p.getCurChar()
 	if !ok {
 		return nil
@@ -133,11 +134,8 @@ func (p *Parser) Parse() Json {
 
 	for {
 		key := p.getStringToken()
-		log.Println(key)
 		p.expectChar(":")
 		val := p.getValue()
-		// val := p.getStringToken()
-		log.Println(val)
 		json[key] = val
 
 		c, ok := p.getCurCharAndSkip()
