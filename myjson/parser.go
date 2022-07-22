@@ -1,146 +1,80 @@
 package myjson
 
-import (
-	"log"
-	"strconv"
-)
-
 type Parser struct {
-	source string
+	text   string
 	curpos int
 }
 
-type Json map[string]interface{}
-
-func NewParser(source string) *Parser {
-	var newParser Parser
-	newParser.source = source
-	newParser.curpos = 0
-	return &newParser
-}
-
-func (p *Parser) getCurChar() (string, bool) {
-	if len(p.source) <= p.curpos {
-		return "", false
-	}
-	return string(p.source[p.curpos]), true
-}
-
-func (p *Parser) getCurCharAndSkip() (string, bool) {
-	p.skipSpaces()
-	if len(p.source) <= p.curpos {
-		return "", false
-	}
-	char := string(p.source[p.curpos])
-	p.curpos++
-	return char, true
-}
-
-func (p *Parser) skipSpaces() {
-	for {
-		char, ok := p.getCurChar()
-		if !ok || char != " " {
-			return
-		}
-		p.curpos++
+func NewParser(text string) *Parser {
+	return &Parser{
+		text:   text,
+		curpos: 0,
 	}
 }
 
-func (p *Parser) getStringToken() (name string) {
-	p.skipSpaces()
-	char, ok := p.getCurChar()
-	if !ok || char != "\"" {
+func (p *Parser) parseSymbol() (string, error) { return "", nil }
+
+// {key: value} となるようなもの, json と区別
+func (p *Parser) parseObject() (json map[string]interface{}, err error) {
+	json = map[string]interface{}{}
+	key, err := p.parseString()
+	if err != nil {
+		// パースエラー
 		return
 	}
-	p.curpos++
-
-	for {
-		char, ok := p.getCurChar()
-		if !ok || char == "\"" {
-			p.curpos++
-			return
-		}
-		name += char
-		p.curpos++
-	}
-}
-
-func (p *Parser) expectChar(char string) {
-	c, ok := p.getCurCharAndSkip() // -> {
-	if !ok || c != char {
-		log.Printf("Expect %s got %s\n", char, c)
+	val, err := p.parseObject()
+	if err != nil {
+		// パースエラー
 		return
 	}
+	json[key] = val
+	// TODO 複数項目に対応
+	return
 }
 
-func (p *Parser) getNumber() int {
-	var symbol string
-	for {
-		c, ok := p.getCurCharAndSkip()
-		if !ok || c < "0" || "9" < c {
-			break
-		}
-		symbol += c
-	}
-	p.curpos--
-	if num, ok := strconv.Atoi(symbol); ok != nil {
-		log.Printf("In getNumber(): cannot convert %s to int\n", symbol)
-		return 0
-	} else {
-		return num
-	}
-}
+// [value, value ,..]となるようなもの
+func (p *Parser) parseList() {}
 
-func (p *Parser) getBool() bool {
-	symbol := ""
-	for {
-		c, ok := p.getCurCharAndSkip()
-		if !ok || c == " " || c == "," || c == "}" {
-			break
-		}
-		symbol += c
+func (p *Parser) parseString() (string, error) { return "", nil }
+
+func (p *Parser) parseNumber() {}
+
+func (p *Parser) parseBool() (bool, error) {
+	symbol, err := p.parseSymbol()
+	if err != nil {
+		return false, err
 	}
-	p.curpos--
 	switch symbol {
 	case "true":
-		return true
+		return true, nil
 	case "false":
-		return false
+		return false, nil
 	default:
-		log.Printf("In getBool(): got unexpected symbol: %s\n", symbol)
-		return true
+		// パースエラー　got unknown symbol
+		return false, err
 	}
 }
 
-func (p *Parser) getValue() interface{} {
-	p.skipSpaces()
-	c, ok := p.getCurChar()
-	if !ok {
-		return nil
+func (p *Parser) parseNull() (bool, error) {
+	symbol, err := p.parseSymbol()
+	if err != nil {
+		return false, err
 	}
-	switch {
-	case "0" <= c && c <= "9":
-		return p.getNumber()
-	case c == "t" || c == "f":
-		return p.getBool()
+	switch symbol {
+	case "null":
+		return true, nil
 	default:
-		return p.getStringToken()
+		return false, nil
 	}
 }
 
-func (p *Parser) Parse() Json {
-	json := Json{}
-	p.expectChar("{")
-
-	for {
-		key := p.getStringToken()
-		p.expectChar(":")
-		val := p.getValue()
-		json[key] = val
-
-		c, ok := p.getCurCharAndSkip()
-		if !ok || c != "," {
-			return json
-		}
-	}
+func (p *Parser) ParseJson() map[string]interface{} {
+	p.parseObject()
+	p.parseList()
+	p.parseString()
+	p.parseNumber()
+	p.parseNull()
+	p.parseBool()
+	// どれにも当てはまらなければエラー
+	return nil
 }
