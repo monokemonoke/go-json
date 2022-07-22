@@ -1,29 +1,33 @@
 package myjson
 
+import "unicode/utf8"
+
 type Parser struct {
-	text   string
+	text   []rune
 	curpos int
+	len    int
 }
 
 func NewParser(text string) *Parser {
 	return &Parser{
-		text:   text,
+		text:   []rune(text),
 		curpos: 0,
+		len:    utf8.RuneCountInString(text),
 	}
 }
 
 func (p *Parser) parseSymbol() (string, error) {
 	now := p.curpos
-	for now < len(p.text) && (p.text[now]) == ' ' {
+	for now < p.len && p.text[now] == ' ' {
 		now++
 	}
 
-	symbol := ""
+	symbol := []rune{}
 	for now < len(p.text) && p.text[now] != ' ' {
-		symbol += string(p.text[now])
+		symbol = append(symbol, p.text[now])
 		now++
 	}
-	return symbol, nil
+	return string(symbol), nil
 }
 
 // {key: value} となるようなもの, json と区別

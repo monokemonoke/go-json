@@ -13,6 +13,26 @@ func TestParseSymbol(t *testing.T) {
 			expectSymbol: "symbol",
 			expectErr:    nil,
 		},
+		{
+			input:        "symbol ",
+			expectSymbol: "symbol",
+			expectErr:    nil,
+		},
+		{
+			input:        "   symbol",
+			expectSymbol: "symbol",
+			expectErr:    nil,
+		},
+		{
+			input:        "symbol123",
+			expectSymbol: "symbol123",
+			expectErr:    nil,
+		},
+		{
+			input:        "あかさたな",
+			expectSymbol: "あかさたな",
+			expectErr:    nil,
+		},
 	}
 
 	for _, tc := range cases {
