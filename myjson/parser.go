@@ -12,7 +12,19 @@ func NewParser(text string) *Parser {
 	}
 }
 
-func (p *Parser) parseSymbol() (string, error) { return "", nil }
+func (p *Parser) parseSymbol() (string, error) {
+	now := p.curpos
+	for now < len(p.text) && (p.text[now]) == ' ' {
+		now++
+	}
+
+	symbol := ""
+	for now < len(p.text) && p.text[now] != ' ' {
+		symbol += string(p.text[now])
+		now++
+	}
+	return symbol, nil
+}
 
 // {key: value} となるようなもの, json と区別
 func (p *Parser) parseObject() (json map[string]interface{}, err error) {
